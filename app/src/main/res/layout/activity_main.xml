@@ -29,7 +29,7 @@
                     android:layout_marginStart="8dp"
                     android:layout_marginLeft="8dp"
                     android:layout_marginTop="8dp"
-                    android:text="Work Manager (network == connected)"
+                    android:text="Work Manager"
                     android:textSize="18sp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -41,7 +41,7 @@
                     android:layout_marginStart="8dp"
                     android:layout_marginLeft="8dp"
                     android:layout_marginTop="8dp"
-                    android:text="Schedule 15 seconds"
+                    android:text="Schedule 30 seconds"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/textView" />
 
@@ -111,6 +111,14 @@
                     android:layout_marginTop="8dp"
                     android:text="Optimization options"
                     android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/failedText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/holo_red_dark"
+                    android:text="There are failed work requests, consider disabling battery optimization for this app."
+                    android:visibility="gone"/>
 
                 <Button
                     android:id="@+id/optSystem"

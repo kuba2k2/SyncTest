@@ -27,13 +27,13 @@ class SyncWorker(val ctx: Context, val params: WorkerParameters) : Worker(ctx, p
         val notificationManager = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
 
-        val constraints = Constraints.Builder()
+        /*val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+            .build()*/
 
         val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setInitialDelay(15, TimeUnit.SECONDS)
-            .setConstraints(constraints)
+            .setInitialDelay(30, TimeUnit.SECONDS)
+            //.setConstraints(constraints)
             .addTag(TAG)
             .build()
 

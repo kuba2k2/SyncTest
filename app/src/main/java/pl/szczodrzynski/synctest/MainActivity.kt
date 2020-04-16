@@ -1,20 +1,21 @@
 package pl.szczodrzynski.synctest
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
+import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 import androidx.core.content.ContextCompat.startActivity
 import android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+import android.view.View
 import android.widget.Toast
-import androidx.work.Constraints
-import androidx.work.NetworkType
+import androidx.work.*
+import androidx.work.impl.WorkManagerImpl
 
 
 class MainActivity : AppCompatActivity() {
@@ -28,13 +29,13 @@ class MainActivity : AppCompatActivity() {
         workManagerUpdateInfo()
 
         workManagerSchedule20min.setOnClickListener {
-            val constraints = Constraints.Builder()
+            /*val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
+                .build()*/
 
             val syncWorkRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-                .setInitialDelay(15, TimeUnit.SECONDS)
-                .setConstraints(constraints)
+                .setInitialDelay(30, TimeUnit.SECONDS)
+                //.setConstraints(constraints)
                 .addTag(SyncWorker.TAG)
                 .build()
 
@@ -95,10 +96,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("RestrictedApi")
     private fun workManagerUpdateInfo() {
-        workManager.getWorkInfosByTag(SyncWorker.TAG).get().let {
+        workManager.getWorkInfosByTag(SyncWorker.TAG).get().let { workInfos ->
+            AsyncTask.execute {
+                val workManager = workManager as WorkManagerImpl
+                val scheduledWork = workManager.workDatabase.workSpecDao().scheduledWork
+                // remove finished work and other than SyncWorker
+                scheduledWork.removeAll { it.workerClassName != SyncWorker::class.java.canonicalName || it.isPeriodic || it.state.isFinished }
+                // remove all enqueued work that had to (but didn't) run at some point in the past (at least 2min ago)
+                val hasFailedWork = scheduledWork.removeAll { it.state == WorkInfo.State.ENQUEUED && it.periodStartTime+it.initialDelay < System.currentTimeMillis() - 15*1000 }
+                failedText.post {
+                    failedText.visibility = if (hasFailedWork) View.VISIBLE else View.GONE
+                }
+            }
+
             val sb = StringBuilder()
-            it.forEachIndexed { index, workInfo ->
+            workInfos.forEachIndexed { index, workInfo ->
                 sb.append("${index+1} - ${workInfo.id} STATE = ${workInfo.state}\n\n")
             }
             workManagerInfo.text = sb.toString()
